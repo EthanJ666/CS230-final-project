@@ -1,0 +1,13 @@
+train: /content/drive/My Drive/CS230 final_project/drone_dataset/train/images
+val: /content/drive/My Drive/CS230 final_project/drone_dataset/valid/images
+test: /content/drive/My Drive/CS230 final_project/drone_dataset/test/images
+
+nc: 2
+names: ['0', '1']
+
+roboflow:
+  workspace: projects-s5hzp
+  project: dronesegment
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/projects-s5hzp/dronesegment/dataset/1
