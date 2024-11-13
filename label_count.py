@@ -1,6 +1,7 @@
 import os
 
-label_dir = './drone_dataset/train/labels'
+#label_dir = './drone_dataset/train/labels'
+label_dir = './drone_augmented/train/labels'
 
 count_0 = 0
 count_1 = 0
