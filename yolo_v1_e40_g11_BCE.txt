@@ -1,0 +1,7 @@
+Starting Testing
+Mean IoU: 0.012152325361967087
+Mean Box Location Error: 0.5596926161060212
+Mean Box Size Error: 0.1526896523663697
+Precision: 0.8412698412698413
+Recall: 0.625
+F1 score: 0.7171853856562923
