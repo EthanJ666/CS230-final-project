@@ -81,11 +81,43 @@ class CustomYOLODataset(Dataset):
         return image, label.view(-1), img_path
 
 
+def calculate_iou(pred_boxes, target_boxes):
+    """
+    Calculate IoU between bounding boxes.
+    """
+    # input pred_boxes of shape (N, 4), which indicates (midpoint_x, midpoint_y, width, height)
+    pred_x1 = pred_boxes[:, 0] - pred_boxes[:, 2] / 2
+    pred_y1 = pred_boxes[:, 1] - pred_boxes[:, 3] / 2
+    pred_x2 = pred_boxes[:, 0] + pred_boxes[:, 2] / 2
+    pred_y2 = pred_boxes[:, 1] + pred_boxes[:, 3] / 2
+
+    # target input is the same
+    target_x1 = target_boxes[:, 0] - target_boxes[:, 2] / 2
+    target_y1 = target_boxes[:, 1] - target_boxes[:, 3] / 2
+    target_x2 = target_boxes[:, 0] + target_boxes[:, 2] / 2
+    target_y2 = target_boxes[:, 1] + target_boxes[:, 3] / 2
+
+    inter_x1 = torch.max(pred_x1, target_x1)
+    inter_y1 = torch.max(pred_y1, target_y1)
+    inter_x2 = torch.min(pred_x2, target_x2)
+    inter_y2 = torch.min(pred_y2, target_y2)
+
+    inter_area = torch.clamp(inter_x2 - inter_x1, min=0) * torch.clamp(inter_y2 - inter_y1, min=0)
+
+    pred_area = (pred_x2 - pred_x1) * (pred_y2 - pred_y1)
+    target_area = (target_x2 - target_x1) * (target_y2 - target_y1)
+    union_area = pred_area + target_area - inter_area
+
+    # Calculate IoU
+    iou = inter_area / torch.clamp(union_area, min=1e-6)
+    return iou
+
+
 #This loss function does not work, please review
 class YoloLoss(nn.Module):
     def __init__(self, grid_size, lambda_coord=1.5, lambda_noobj=1, lamda_class=1):
         super(YoloLoss, self).__init__()
-        self.mse = nn.MSELoss(reduction="mean")
+        #self.mse = nn.MSELoss(reduction="mean")
         self.bce = nn.BCEWithLogitsLoss()
         self.grid_size = grid_size
         self.lambda_coord = lambda_coord
@@ -103,7 +135,9 @@ class YoloLoss(nn.Module):
         pred_class = predictions[..., 5]  # Class label
         target_class = target[..., 5]
 
-        box_loss = self.mse(pred_boxes, target_boxes) * self.lambda_coord
+        #box_loss = self.mse(pred_boxes, target_boxes) * self.lambda_coord
+        iou = calculate_iou(pred_boxes.view(-1, 4), target_boxes.view(-1, 4))
+        box_loss = iou.mean() * self.lambda_coord
         conf_obj_loss = self.bce(pred_conf * target_conf, target_conf) 
         conf_noobj_loss = self.bce(pred_conf * (1 - target_conf), target_conf * (1 - target_conf)) * self.lambda_noobj
         class_loss = self.bce(pred_class, target_class) * self.lambda_class
