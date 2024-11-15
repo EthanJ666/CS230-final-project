@@ -81,10 +81,73 @@ class CustomYOLODataset(Dataset):
         return image, label.view(-1), img_path
 
 
+#This loss function does not work, please review
+class YoloLoss(nn.Module):
+    def __init__(self, grid_size, lambda_coord=1.05, lamda_class=1, lambda_box=1, lambda_conf=1):
+        super(YoloLoss, self).__init__()
+        self.mse_coord = nn.MSELoss(reduction="mean")
+        self.mse_box = nn.MSELoss(reduction="mean")
+        self.bce_conf = nn.BCEWithLogitsLoss()
+        self.bce_class = nn.BCEWithLogitsLoss()
+        self.grid_size = grid_size
+        self.lambda_coord = lambda_coord
+        self.lambda_box = lambda_box
+        self.lambda_class = lamda_class
+        self.lambda_conf = lambda_conf
+
+    def forward(self, predictions, target):
+        predictions = predictions.view(-1, self.grid_size, self.grid_size, 6)
+        target = target.view(-1, self.grid_size, self.grid_size, 6)
+        
+        pred_boxes = predictions[..., :4]  # x, y, w, h
+        target_boxes = target[..., :4]
+        pred_conf = predictions[..., 4]  # Confidence score
+        target_conf = target[..., 4]
+        pred_class = predictions[..., 5]  # Class label
+        target_class = target[..., 5]
+
+        coord_loss = self.mse_coord(predictions[...,0:4], target[...,0:4]) * self.lambda_coord
+        conf_loss = self.lambda_conf * self.bce_conf(pred_conf, target_conf)
+        class_loss = self.bce_class(pred_class, target_class) * self.lambda_class
+        total_loss = coord_loss + conf_loss + class_loss
+        # total_loss = self.lambda_coord * self.bce(predictions[...,0:2]) + self.lambda_box * self.bce(predictions[...,2:4]) + self.bce(predictions[..., 4:])
+
+        return total_loss
+
+class YoloLoss2(nn.Module):
+    def __init__(self, grid_size, lambda_coord=1.05, lamda_class=1.1, lambda_box=1, lambda_conf=1):
+        super(YoloLoss2, self).__init__()
+        self.mse_coord = nn.MSELoss(reduction="mean")
+        self.mse_box = nn.MSELoss(reduction="mean")
+        self.bce_conf = nn.BCEWithLogitsLoss()
+        self.bce_class = nn.BCEWithLogitsLoss()
+        self.grid_size = grid_size
+        self.lambda_coord = lambda_coord
+        self.lambda_box = lambda_box
+        self.lambda_class = lamda_class
+        self.lambda_conf = lambda_conf
+
+    def forward(self, predictions, target):
+        predictions = predictions.view(-1, self.grid_size, self.grid_size, 6)
+        target = target.view(-1, self.grid_size, self.grid_size, 6)
+        
+        pred_boxes = predictions[..., :4]  # x, y, w, h
+        target_boxes = target[..., :4]
+        pred_conf = predictions[..., 4]  # Confidence score
+        target_conf = target[..., 4]
+        pred_class = predictions[..., 5]  # Class label
+        target_class = target[..., 5]
+
+        coord_loss = self.mse_coord(predictions[...,0:2], target[...,0:2]) * self.lambda_coord
+        box_loss = self.mse_box(predictions[...,2:4], target[..., 2:4]) * self.lambda_box
+        conf_loss = self.lambda_conf * self.bce_conf(pred_conf, target_conf)
+        class_loss = self.bce_class(pred_class, target_class) * self.lambda_class
+        total_loss = coord_loss + box_loss + conf_loss + class_loss
+        # total_loss = self.lambda_coord * self.bce(predictions[...,0:2]) + self.lambda_box * self.bce(predictions[...,2:4]) + self.bce(predictions[..., 4:])
+
+        return total_loss
+    
 def calculate_iou(pred_boxes, target_boxes):
-    """
-    Calculate IoU between bounding boxes.
-    """
     # input pred_boxes of shape (N, 4), which indicates (midpoint_x, midpoint_y, width, height)
     pred_x1 = pred_boxes[:, 0] - pred_boxes[:, 2] / 2
     pred_y1 = pred_boxes[:, 1] - pred_boxes[:, 3] / 2
@@ -113,15 +176,15 @@ def calculate_iou(pred_boxes, target_boxes):
     return iou
 
 
-#This loss function does not work, please review
-class YoloLoss(nn.Module):
-    def __init__(self, grid_size, lambda_coord=1.5, lambda_noobj=1, lamda_class=1):
-        super(YoloLoss, self).__init__()
+class YoloLossIou(nn.Module):
+    def __init__(self, grid_size, lambda_coord=1, lambda_conf=1, lamda_class=1):
+        super(YoloLossIou, self).__init__()
         #self.mse = nn.MSELoss(reduction="mean")
-        self.bce = nn.BCEWithLogitsLoss()
+        self.bce_conf = nn.BCEWithLogitsLoss()
+        self.bce_class = nn.BCEWithLogitsLoss()
         self.grid_size = grid_size
         self.lambda_coord = lambda_coord
-        self.lambda_noobj = lambda_noobj
+        self.lambda_conf = lambda_conf
         self.lambda_class = lamda_class
 
     def forward(self, predictions, target):
@@ -138,10 +201,9 @@ class YoloLoss(nn.Module):
         #box_loss = self.mse(pred_boxes, target_boxes) * self.lambda_coord
         iou = calculate_iou(pred_boxes.view(-1, 4), target_boxes.view(-1, 4))
         box_loss = iou.mean() * self.lambda_coord
-        conf_obj_loss = self.bce(pred_conf * target_conf, target_conf) 
-        conf_noobj_loss = self.bce(pred_conf * (1 - target_conf), target_conf * (1 - target_conf)) * self.lambda_noobj
-        class_loss = self.bce(pred_class, target_class) * self.lambda_class
-        total_loss = box_loss + conf_obj_loss + conf_noobj_loss + class_loss
-        # print(box_loss , conf_obj_loss , conf_noobj_loss , class_loss)
+        conf_loss = self.lambda_conf * self.bce_conf(pred_conf, target_conf)
+        class_loss = self.bce_class(pred_class, target_class) * self.lambda_class
+        total_loss = box_loss + conf_loss + class_loss
 
         return total_loss
+        
