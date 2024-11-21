@@ -1,4 +1,4 @@
-from yolo_version1_model import CustomYOLODataset, YOLO, YoloLoss
+from yolo_version1_model import CustomYOLODataset, YOLO, YoloLoss2
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -15,9 +15,9 @@ transform = transforms.Compose([
     transforms.ToTensor(),
 ])
 
-grid_size = 11
+grid_size = 5
 num_epochs = 40
-batch_size = 32
+batch_size = 128
 
 train_folder = '/home/ubuntu/CS230_final_project/CS230-final-project/drone_dataset/train'
 weight_output_folder = '/home/ubuntu/CS230_final_project/CS230-final-project/yolo_v1_weights'
@@ -28,8 +28,9 @@ yolo = YOLO(grid_size=grid_size)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 yolo = yolo.to(device)
 
-criterion = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(yolo.parameters(), lr=0.001)
+# criterion = nn.BCEWithLogitsLoss()
+criterion = YoloLoss2(grid_size=grid_size, lambda_coord=1.5, lamda_class=1.1, lambda_box=2, lambda_conf=1)
+optimizer = optim.Adam(yolo.parameters(), lr=0.0005, weight_decay=1e-4)
 
 for epoch in range(num_epochs):
     running_loss = 0.0
@@ -48,5 +49,5 @@ for epoch in range(num_epochs):
         running_loss += loss.item()
     print(f'Epoch [{epoch + 1}], Loss: {running_loss / len(train_loader)}')
 print('Finished Training')
-torch.save(yolo.state_dict(), weight_output_folder + '/yolo_model.pth')
+torch.save(yolo.state_dict(), weight_output_folder + '/yolo_model_grid5_yololoss_lr0.00001_batch128.pth')
 print('Model saved')

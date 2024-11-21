@@ -37,10 +37,10 @@ def calculate_iou(box1, box2):
 
 test_folder = '/home/ubuntu/CS230_final_project/CS230-final-project/drone_dataset/test'
 output_folder = '/home/ubuntu/CS230_final_project/CS230-final-project/yolo_v1_output_images'
-model_path = '/home/ubuntu/CS230_final_project/CS230-final-project/yolo_v1_weights/yolo_model_epoch40_grid11_data_aug.pth' #change path to the corresponding 
+model_path = '/home/ubuntu/CS230_final_project/CS230-final-project/yolo_v1_weights/yolo_model_grid5_yololoss2.pth' #change path to the corresponding 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-grid_size = 11 #change grid size to 
+grid_size = 5 #change grid size to 
 
 transform = transforms.Compose([
     transforms.Resize((640, 640)),
@@ -51,7 +51,7 @@ transform = transforms.Compose([
 yolo = YOLO(grid_size=grid_size)
 yolo.load_state_dict(torch.load(model_path))
 yolo.to(device)
-
+                       
 
 
 print('Starting Testing')
@@ -75,6 +75,9 @@ with torch.no_grad():
         labels = labels.to(device)
         outputs = yolo(inputs)
         predictions = torch.sigmoid(outputs).view(grid_size, grid_size, 6).cpu().numpy()
+        # outputs[...,0:4] = torch.log(outputs[...,0:4])
+        # outputs[...,4:] = torch.sigmoid(outputs[...,4:])
+        # predictions = outputs.view(grid_size, grid_size, 6).cpu().numpy()
         labels = labels.view(grid_size, grid_size, 6).cpu().numpy()
 
         for row in range(grid_size):

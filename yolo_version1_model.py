@@ -13,7 +13,7 @@ import torch.nn.functional as F
 
 def create_conv_block(in_channels, out_channels, kernel_size, stride, padding):
     return nn.Sequential(
-        nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=False),
+        nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, bias=True),
         nn.BatchNorm2d(out_channels),
         nn.LeakyReLU(0.1),
     )
@@ -80,42 +80,8 @@ class CustomYOLODataset(Dataset):
 
         return image, label.view(-1), img_path
 
-
-#This loss function does not work, please review
-class YoloLoss(nn.Module):
-    def __init__(self, grid_size, lambda_coord=1.05, lamda_class=1, lambda_box=1, lambda_conf=1):
-        super(YoloLoss, self).__init__()
-        self.mse_coord = nn.MSELoss(reduction="mean")
-        self.mse_box = nn.MSELoss(reduction="mean")
-        self.bce_conf = nn.BCEWithLogitsLoss()
-        self.bce_class = nn.BCEWithLogitsLoss()
-        self.grid_size = grid_size
-        self.lambda_coord = lambda_coord
-        self.lambda_box = lambda_box
-        self.lambda_class = lamda_class
-        self.lambda_conf = lambda_conf
-
-    def forward(self, predictions, target):
-        predictions = predictions.view(-1, self.grid_size, self.grid_size, 6)
-        target = target.view(-1, self.grid_size, self.grid_size, 6)
-        
-        pred_boxes = predictions[..., :4]  # x, y, w, h
-        target_boxes = target[..., :4]
-        pred_conf = predictions[..., 4]  # Confidence score
-        target_conf = target[..., 4]
-        pred_class = predictions[..., 5]  # Class label
-        target_class = target[..., 5]
-
-        coord_loss = self.mse_coord(predictions[...,0:4], target[...,0:4]) * self.lambda_coord
-        conf_loss = self.lambda_conf * self.bce_conf(pred_conf, target_conf)
-        class_loss = self.bce_class(pred_class, target_class) * self.lambda_class
-        total_loss = coord_loss + conf_loss + class_loss
-        # total_loss = self.lambda_coord * self.bce(predictions[...,0:2]) + self.lambda_box * self.bce(predictions[...,2:4]) + self.bce(predictions[..., 4:])
-
-        return total_loss
-
 class YoloLoss2(nn.Module):
-    def __init__(self, grid_size, lambda_coord=1.05, lamda_class=1.1, lambda_box=1, lambda_conf=1):
+    def __init__(self, grid_size, lambda_coord=1.5, lamda_class=1.1, lambda_box=2, lambda_conf=1):
         super(YoloLoss2, self).__init__()
         self.mse_coord = nn.MSELoss(reduction="mean")
         self.mse_box = nn.MSELoss(reduction="mean")
@@ -143,7 +109,6 @@ class YoloLoss2(nn.Module):
         conf_loss = self.lambda_conf * self.bce_conf(pred_conf, target_conf)
         class_loss = self.bce_class(pred_class, target_class) * self.lambda_class
         total_loss = coord_loss + box_loss + conf_loss + class_loss
-        # total_loss = self.lambda_coord * self.bce(predictions[...,0:2]) + self.lambda_box * self.bce(predictions[...,2:4]) + self.bce(predictions[..., 4:])
 
         return total_loss
     
