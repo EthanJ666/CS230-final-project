@@ -37,7 +37,7 @@ def calculate_iou(box1, box2):
 
 test_folder = '/home/ubuntu/CS230_final_project/CS230-final-project/drone_dataset/test'
 output_folder = '/home/ubuntu/CS230_final_project/CS230-final-project/yolo_v1_output_images'
-model_path = '/home/ubuntu/CS230_final_project/CS230-final-project/yolo_v1_weights/yolo_model_grid5_yololoss2.pth' #change path to the corresponding 
+model_path = '/home/ubuntu/CS230_final_project/CS230-final-project/yolo_v1_weights/yolo_model_grid5_yololoss_lr0.00001_batch128.pth' #change path to the corresponding 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 grid_size = 5 #change grid size to 

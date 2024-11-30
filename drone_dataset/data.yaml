@@ -1,7 +1,6 @@
-train: /content/drive/My Drive/CS230 final_project/drone_dataset/train/images
-val: /content/drive/My Drive/CS230 final_project/drone_dataset/valid/images
-test: /content/drive/My Drive/CS230 final_project/drone_dataset/test/images
-
+train: /home/ubuntu/CS230_final_project/CS230-final-project/drone_augmented/preprocessed_drone_dataset/drone_dataset_contrast/train
+val: /home/ubuntu/CS230_final_project/CS230-final-project/drone_augmented/preprocessed_drone_dataset/drone_dataset_contrast/test
+test: /home/ubuntu/CS230_final_project/CS230-final-project/drone_augmented/preprocessed_drone_dataset/drone_dataset_contrast/test
 nc: 2
 names: ['0', '1']
 

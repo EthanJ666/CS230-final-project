@@ -81,7 +81,7 @@ class CustomYOLODataset(Dataset):
         return image, label.view(-1), img_path
 
 class YoloLoss2(nn.Module):
-    def __init__(self, grid_size, lambda_coord=1.5, lamda_class=1.1, lambda_box=2, lambda_conf=1):
+    def __init__(self, grid_size, lambda_coord=0.05, lamda_class=1.1, lambda_box=0.05, lambda_conf=1):
         super(YoloLoss2, self).__init__()
         self.mse_coord = nn.MSELoss(reduction="mean")
         self.mse_box = nn.MSELoss(reduction="mean")

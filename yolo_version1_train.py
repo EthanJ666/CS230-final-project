@@ -9,15 +9,14 @@ import os
 import math
 from tqdm import tqdm
 
-
 transform = transforms.Compose([
     transforms.Resize((640, 640)),
     transforms.ToTensor(),
 ])
 
 grid_size = 5
-num_epochs = 40
-batch_size = 128
+num_epochs = 30
+batch_size = 64
 
 train_folder = '/home/ubuntu/CS230_final_project/CS230-final-project/drone_dataset/train'
 weight_output_folder = '/home/ubuntu/CS230_final_project/CS230-final-project/yolo_v1_weights'
@@ -29,8 +28,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 yolo = yolo.to(device)
 
 # criterion = nn.BCEWithLogitsLoss()
-criterion = YoloLoss2(grid_size=grid_size, lambda_coord=1.5, lamda_class=1.1, lambda_box=2, lambda_conf=1)
-optimizer = optim.Adam(yolo.parameters(), lr=0.0005, weight_decay=1e-4)
+criterion = YoloLoss2(grid_size=grid_size, lambda_coord=0.08, lamda_class=1, lambda_box=0.08, lambda_conf=1)
+optimizer = optim.Adam(yolo.parameters(), lr=0.0002, weight_decay=1e-4)
 
 for epoch in range(num_epochs):
     running_loss = 0.0
