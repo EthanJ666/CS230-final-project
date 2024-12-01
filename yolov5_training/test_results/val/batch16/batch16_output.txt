@@ -1,0 +1,5 @@
+test: Scanning /home/ubuntu/CS230_final_project/CS230-final-project/drone_dataset/test/labels.cache... 396 images, 0 backgrounds, 0 corrupt: 100%|██████████| 396/396 [00:00<?, ?it/s]
+                 Class     Images  Instances          P          R      mAP50   mAP50-95   Mean_IOU: 100%|██████████| 13/13 [00:05<00:00,  2.30it/s]
+                   all        396        443      0.947      0.848      0.931      0.561      0.552
+                     0        396        424      0.967      0.906      0.969      0.521      0.552
+                     1        396         19      0.927      0.789      0.894      0.601      0.557
