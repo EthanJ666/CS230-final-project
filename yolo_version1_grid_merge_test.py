@@ -85,7 +85,7 @@ for model, model_path in zip(yolo_models, model_paths):
 test_dataset = CustomYOLODataset(
     image_folder=test_folder + '/images',
     label_folder=test_folder + '/labels',
-    grid_size=7,  # Placeholder
+    grid_size=1,
     transform=transform
 )
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
